@@ -294,16 +294,43 @@ public class VizComponentWidget extends FlowPanel {
 
     public void addNodeCss(String nodeId, String property, String value) {
         if (svg != null) {
-            // Style the polygon or ellipse that make up the node
-            // In case some other shape then nothing happens
             String id = nodeIdToSvgIdMap.get(nodeId);
             Element svgNode = DOM.getElementById(id);
             applyCssToElement(svgNode, property, value);
         }
     }
+    
+    public void removeNodeCss(String nodeId, String property) {
+        if (svg != null) {
+            String id = nodeIdToSvgIdMap.get(nodeId);
+            Element svgNode = DOM.getElementById(id);
+            clearCssFromElement(svgNode, property);
+        }
+    }
 
-    private void applyCssToElement(Element svgNode, String property,
-            String value) {
+    private void clearCssFromElement(Element svgNode, String property) {
+    	// Style the polygon or ellipse that make up the node
+        // In case some other shape then nothing happens
+    	
+        NodeList<Element> children = svgNode.getElementsByTagName("polygon");
+        if (children.getLength() > 0) {
+            for (int i = 0; i < children.getLength(); i++) {
+                Element child = children.getItem(i);
+                child.getStyle().clearProperty(property);
+            }
+        } else {
+            children = svgNode.getElementsByTagName("ellipse");
+            for (int i = 0; i < children.getLength(); i++) {
+                Element child = children.getItem(i);
+                child.getStyle().clearProperty(property);
+            }
+        }
+    }
+    
+    private void applyCssToElement(Element svgNode, String property, String value) {
+    	
+    	// Style the polygon or ellipse that make up the node
+        // In case some other shape then nothing happens
         NodeList<Element> children = svgNode.getElementsByTagName("polygon");
         if (children.getLength() > 0) {
             for (int i = 0; i < children.getLength(); i++) {
