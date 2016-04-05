@@ -5,7 +5,7 @@
 	<groupId>com.vaadin.pontus</groupId>
 	<artifactId>vizcomponent</artifactId>
 	<packaging>jar</packaging>
-	<version>0.2</version>
+	<version>0.3</version>
 	<name>VizComponent Add-on</name>
 
 	<properties>
@@ -91,11 +91,6 @@
 			<version>${vaadin.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.vectomatic</groupId>
-			<artifactId>lib-gwt-svg</artifactId>
-			<version>0.5.10</version>
-		</dependency>
 		
 		<!-- This can be replaced with TestNG or some other test framework supported by the surefire plugin -->
 		<dependency>
@@ -152,6 +147,9 @@
 						<goals>
 							<goal>jar</goal>
 						</goals>
+						<configuration>
+                			<additionalparam>-Xdoclint:none</additionalparam>
+            			</configuration>
 					</execution>
 				</executions>
 			</plugin>

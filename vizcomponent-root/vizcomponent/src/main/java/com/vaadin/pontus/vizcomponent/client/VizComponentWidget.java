@@ -40,6 +40,8 @@ public class VizComponentWidget extends FlowPanel {
     static int globalComponentID = 1;
     private final int componentID;
     private JavaScriptObject zoomPanHandler;
+    private int nodeCounter;
+    private int edgeCounter;
 
     public VizComponentWidget() {
 
@@ -50,28 +52,32 @@ public class VizComponentWidget extends FlowPanel {
         nodeIdToSvgIdMap = new HashMap<String, String>();
         edgeIdToSvgIdMap = new HashMap<String, String>();
         componentID = globalComponentID++;
+        nodeCounter = 0;
+        edgeCounter = 0;
 
     }
 
-    public void renderGraph(final VizComponentState graphState) {
+    public void renderGraph(Node graph, String type,
+            final ZoomSettings zoomSettings) {
 
         svgIdToNodeIdMap.clear();
         svgIdToEdgeIdMap.clear();
         nodeIdToSvgIdMap.clear();
         edgeIdToSvgIdMap.clear();
-
-        ArrayList<Edge> connections = graphState.graph;
+        nodeCounter = 1;
+        edgeCounter = 1;
         if (svg != null) {
             getElement().removeChild(svg);
             svg = null;
         }
-        if (connections == null || connections.isEmpty()) {
+        if (graph.graph == null) {
             return;
         }
-        int nodeCounter = 1;
-        int edgeCounter = 1;
+        if (graph.graph.isEmpty()) {
+            return;
+        }
         String connSymbol;
-        if ("graph".equals(graphState.graphType)) {
+        if ("graph".equals(type)) {
             // It is undirected graph
             connSymbol = " -- ";
         } else {
@@ -80,68 +86,24 @@ public class VizComponentWidget extends FlowPanel {
         }
 
         StringBuilder builder = new StringBuilder();
-        builder.append(graphState.graphType);
+        builder.append(type);
         builder.append(" ");
-        if (graphState.name != null) {
-            builder.append(graphState.name);
-        }
-        builder.append(" { ");
-        if (!graphState.params.isEmpty()) {
-            writeParameters(graphState.params, builder, ";\n");
-            builder.append(";\n");
-        }
-        if (!graphState.nodeParams.isEmpty()) {
-            builder.append("node ");
-            writeParameters(graphState.nodeParams, builder);
-            builder.append(";");
-        }
-        if (!graphState.edgeParams.isEmpty()) {
-            builder.append("edge ");
-            writeParameters(graphState.edgeParams, builder);
-        }
-        for (Edge edge : connections) {
-            Node source = edge.getSource();
-            // Produce a node in case there are parameters for it and it
-            // hasn't been processed before
-            if (!nodeIdToSvgIdMap.containsKey(source.getId())) {
-                String svgNodeId = "node" + nodeCounter++;
-                svgIdToNodeIdMap.put(svgNodeId, source.getId());
-                nodeIdToSvgIdMap.put(source.getId(), svgNodeId);
-                HashMap<String, String> params = source.getParams();
-                params.put("id", svgNodeId); // Use this ID for GraphViz also
-                builder.append(source.getId());
-                writeParameters(params, builder);
-                builder.append(";\n");
-            }
-            if (edge.getDest() != null) {
-                // Produce an edge
-                // Each edge only occurs once
-                String svgEdgeId = "edge" + edgeCounter++;
-                svgIdToEdgeIdMap.put(svgEdgeId, edge.getId());
-                edgeIdToSvgIdMap.put(edge.getId(), svgEdgeId);
-                builder.append(source.getId());
-                builder.append(connSymbol);
-                builder.append(edge.getDest().getId());
-
-                HashMap<String, String> params = edge.getParams();
-                params.put("id", svgEdgeId); // Use this ID for GraphViz also
-                writeParameters(params, builder);
-                builder.append(";\n");
-            }
+        if (graph.id != null) {
+            builder.append(graph.id);
         }
 
-        builder.append(" } ");
+        renderGraph(graph, connSymbol, builder);
 
         try {
             String result = compileSVG(builder.toString());
             getElement().setInnerHTML(result);
+            svg = getElement().getFirstChildElement();
             final String boxid = "_svgbox" + componentID;
             svg = getElement().getFirstChildElement();
             svg.setAttribute("width", "100%");
             svg.setAttribute("height", "100%");
             svg.setId(boxid);
-
-            if (graphState.zoomsettings != null) {
+            if (zoomSettings != null) {
                 // For some reason zooming doesn't work when the component is
                 // created
                 // This way zoom actions are deferred until afterwards.
@@ -149,7 +111,7 @@ public class VizComponentWidget extends FlowPanel {
                     @Override
                     public void execute() {
                         zoomPanHandler = setupZoomPanHandler(boxid,
-                                graphState.zoomsettings);
+                                zoomSettings);
                     }
                 });
             }
@@ -158,6 +120,101 @@ public class VizComponentWidget extends FlowPanel {
             String result = e.getDescription();
             Label label = new Label(result);
             add(label);
+        }
+    }
+
+    private void renderGraph(Node graph, String connSymbol,
+            StringBuilder builder) {
+        ArrayList<Edge> connections = graph.graph;
+        // connections should not be empty
+
+        String svgNodeId = null;
+        String svgEdgeId = null;
+
+        builder.append(" { ");
+        if (!graph.params.isEmpty()) {
+            writeParameters(graph.params, builder, ";\n");
+            builder.append(";\n");
+        }
+        if (!graph.nodeParams.isEmpty()) {
+            builder.append("node ");
+            writeParameters(graph.nodeParams, builder);
+            builder.append(";");
+        }
+        if (!graph.edgeParams.isEmpty()) {
+            builder.append("edge ");
+            writeParameters(graph.edgeParams, builder);
+        }
+        for (Edge edge : connections) {
+            Node source = edge.source;
+            if (source.graph != null) {
+                builder.append("subgraph ");
+                builder.append(source.id);
+                renderGraph(source, connSymbol, builder);
+
+            } else {
+                // Produce a node in case there are parameters for it and it
+                // hasn't been processed before
+                String sourceId = deescapeId(source.id);
+                if (!nodeIdToSvgIdMap.containsKey(sourceId)) {
+                    svgNodeId = "node" + nodeCounter++;
+                    svgIdToNodeIdMap.put(svgNodeId, sourceId);
+                    nodeIdToSvgIdMap.put(sourceId, svgNodeId);
+                    // TODO: The below is redundant. This would be an edge
+                    // statement with empty dest
+                    HashMap<String, String> params = source.params;
+                    builder.append(source.id);
+                    // Produce params
+                    params.put("id", svgNodeId); // Use this ID for GraphViz
+                    // also
+                    if (!params.isEmpty()) {
+                        writeParameters(params, builder);
+                    }
+                    builder.append(";\n");
+                }
+            }
+            if (edge.dest != null) {
+                // Produce an edge
+                // Each edge only occurs once
+                String edgeId = deescapeId(edge.id);
+                svgEdgeId = "edge" + edgeCounter++;
+                svgIdToEdgeIdMap.put(svgEdgeId, edgeId);
+                edgeIdToSvgIdMap.put(edgeId, svgEdgeId);
+                if (source.graph != null) {
+                    builder.append("subgraph ");
+                    builder.append(source.id);
+                    renderGraph(source, connSymbol, builder);
+                } else {
+                    builder.append(source.id);
+                }
+                builder.append(connSymbol);
+                if (edge.dest.graph != null) {
+                    builder.append("subgraph ");
+                    builder.append(edge.dest.id);
+                    renderGraph(edge.dest, connSymbol, builder);
+                } else {
+                    builder.append(edge.dest.id);
+                }
+                HashMap<String, String> params = edge.params;
+                params.put("id", svgEdgeId); // Use this ID for GraphViz also
+                // Produce parameters
+                if (!params.isEmpty()) {
+                    writeParameters(params, builder);
+                }
+                builder.append(";\n");
+            }
+
+        }
+
+        builder.append(" } ");
+
+    }
+
+    private String deescapeId(String str) {
+        if (str.startsWith("\"") && str.endsWith("\"")) {
+            return str.substring(1, str.length() - 1);
+        } else {
+            return str;
         }
     }
 
