@@ -44,13 +44,20 @@ public class VizComponentConnector extends AbstractComponentConnector {
             }
 
             @Override
-            public void addNodeCss(String nodeId, String property, String value) {
+            public void addNodeCss(String nodeId, String property,
+                    String value) {
                 getWidget().addNodeCss(nodeId, property, value);
 
             }
 
             @Override
-            public void addEdgeCss(String edgeId, String property, String value) {
+            public void removeNodeCss(String nodeId, String property) {
+                getWidget().removeNodeCss(nodeId, property);
+            }
+
+            @Override
+            public void addEdgeCss(String edgeId, String property,
+                    String value) {
                 getWidget().addEdgeCss(edgeId, property, value);
 
             }
@@ -127,6 +134,7 @@ public class VizComponentConnector extends AbstractComponentConnector {
                 || stateChangeEvent.hasPropertyChanged("edgeParams")) {
             updateGraph();
         }
+
     }
 
     private void updateGraph() {
@@ -134,4 +142,5 @@ public class VizComponentConnector extends AbstractComponentConnector {
         getWidget().addNodeClickHandler(new NodeClickHandler());
         getWidget().addEdgeClickHandler(new EdgeClickHandler());
     }
+
 }

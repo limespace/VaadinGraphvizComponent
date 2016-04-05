@@ -80,16 +80,16 @@ public class InteractiveDemoView extends HorizontalSplitPanel {
 
 
 	NodeConnection[] connections =   { new NodeConnection(nodes[0], nodes[1]),
-									   new NodeConnection(nodes[0], nodes[5]),
-									   new NodeConnection(nodes[0], nodes[2]),
-									   new NodeConnection(nodes[2], nodes[9]),
-									   new NodeConnection(nodes[3], nodes[9]),
-									   new NodeConnection(nodes[4], nodes[0]),
-									   new NodeConnection(nodes[0], nodes[7]),
-									   new NodeConnection(nodes[7], nodes[8]),
-									   new NodeConnection(nodes[8], nodes[3]),
-									   new NodeConnection(nodes[3], nodes[4])
-									};
+					   new NodeConnection(nodes[0], nodes[5]),
+					   new NodeConnection(nodes[0], nodes[2]),
+					   new NodeConnection(nodes[2], nodes[9]),
+					   new NodeConnection(nodes[3], nodes[9]),
+					   new NodeConnection(nodes[4], nodes[0]),
+					   new NodeConnection(nodes[0], nodes[7]),
+					   new NodeConnection(nodes[7], nodes[8]),
+					   new NodeConnection(nodes[8], nodes[3]),
+					   new NodeConnection(nodes[3], nodes[4])
+					};
 	// @formatter:on
 
     private VizComponent graphComponent;
@@ -132,7 +132,7 @@ public class InteractiveDemoView extends HorizontalSplitPanel {
                     if (lastSelected != null
                             && !lastSelected.equals(ni.getCaption())) {
                         Graph.Node node = graph.getNode(lastSelected);
-                        graphComponent.addCss(node, "fill", "white");
+                        graphComponent.removeCss(node, "fill");
                     }
                     lastSelected = ni.getCaption();
                     Graph.Node node = graph.getNode(lastSelected);

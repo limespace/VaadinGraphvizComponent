@@ -168,7 +168,7 @@ public class VizComponent extends com.vaadin.ui.AbstractComponent {
 
     /**
      * Sets the zoomsettings NULL disables zoom and pan support in general
-     *
+     * 
      * @param zoomsettigns
      */
     public void setPanZoomSettings(ZoomSettings zoomsettigns) {
@@ -195,7 +195,7 @@ public class VizComponent extends com.vaadin.ui.AbstractComponent {
         getState().graphType = graph.getType();
         getState().name = null;// Trigger stateChange event for sure. Works?
                                // Needed?
-        getState().name = escapeId(graph.getName());
+        getState().name = graph.getName();
 
         // Set the graph parameters
         getState().params = null;
@@ -226,7 +226,7 @@ public class VizComponent extends com.vaadin.ui.AbstractComponent {
 
         for (Graph.Node node : graph.getNodes()) {
             Node newNode = new Node();
-            newNode.setId(escapeId(node.getId()));
+            newNode.setId(node.getId());
 
             // Add all parameters to node
             for (String param : node.getParams()) {
@@ -242,10 +242,10 @@ public class VizComponent extends com.vaadin.ui.AbstractComponent {
             } else {
                 for (AbstractMap.SimpleEntry<Graph.Node, Graph.Edge> conn : conns) {
                     Edge newEdge = new Edge();
-                    newEdge.setId(escapeId(conn.getValue().getId()));
+                    newEdge.setId(conn.getValue().getId());
                     newEdge.setSource(newNode);
                     Node destNode = new Node();
-                    destNode.setId(escapeId(conn.getKey().getId()));
+                    destNode.setId(conn.getKey().getId());
                     newEdge.setDest(destNode);
                     for (String param : conn.getValue().getParams()) {
                         newEdge.getParams().put(param,
@@ -257,16 +257,6 @@ public class VizComponent extends com.vaadin.ui.AbstractComponent {
         }
         getState().graph = oldGraph;
 
-    }
-
-    private static String escapeId(String id) {
-        if (id.startsWith("\"") && id.endsWith("\"")) {
-            return id;
-        } else {
-            // Automatically enclose with "" so that special characters work
-            // automatically in id:s
-            return "\"" + id + "\"";
-        }
     }
 
     // We must override getState() to cast the state to VizComponentState
@@ -309,6 +299,19 @@ public class VizComponent extends com.vaadin.ui.AbstractComponent {
     public void addCss(Graph.Node node, String property, String value) {
         getRpcProxy(VizComponentClientRpc.class).addNodeCss(node.getId(),
                 property, value);
+    }
+
+    /**
+     * removes the given css property from the polygon or ellipse that makes up
+     * the node.
+     *
+     * @param node
+     * @param property
+     * @param value
+     */
+    public void removeCss(Graph.Node node, String property) {
+        getRpcProxy(VizComponentClientRpc.class).removeNodeCss(node.getId(),
+                property);
     }
 
     /**
