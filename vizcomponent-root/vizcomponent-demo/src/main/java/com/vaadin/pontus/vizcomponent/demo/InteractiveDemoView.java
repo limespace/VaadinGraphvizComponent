@@ -16,13 +16,16 @@ import com.vaadin.pontus.vizcomponent.model.Graph;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
+import com.vaadin.ui.themes.ValoTheme;
 
 @SuppressWarnings("serial")
 public class InteractiveDemoView extends HorizontalSplitPanel {
@@ -96,7 +99,8 @@ public class InteractiveDemoView extends HorizontalSplitPanel {
     Graph graph;
     Grid grid;
     private Label infoLabel;
-
+    CheckBox chkCenterOnSelect;
+    
     String lastSelected = null;
     Object selectSource;
     Map<String, NodeInfo> nodeInfoMap;
@@ -137,7 +141,8 @@ public class InteractiveDemoView extends HorizontalSplitPanel {
                     lastSelected = ni.getCaption();
                     Graph.Node node = graph.getNode(lastSelected);
                     graphComponent.addCss(node, "fill", "orange");
-                    if (selectSource == null) {
+                    infoLabel.setValue(ni.getCaption() + " - " + ni.getInfo());
+                    if (selectSource == null && chkCenterOnSelect.getValue()) {
                         graphComponent.centerToNode(node);
                     }
                     selectSource = null;
@@ -161,9 +166,18 @@ public class InteractiveDemoView extends HorizontalSplitPanel {
         graphComponent = createGraphComponent();
 
         HorizontalLayout buttonArea = new HorizontalLayout();
+        buttonArea.setSpacing(true);
         // buttonArea.setWidth(100, Unit.PERCENTAGE);
-
-        buttonArea.addComponent(new Button("Center",
+        chkCenterOnSelect = new CheckBox("center on select"); 
+        chkCenterOnSelect.setImmediate(true);
+        chkCenterOnSelect.setValue(true);
+        buttonArea.addComponent(chkCenterOnSelect);
+        buttonArea.setComponentAlignment(chkCenterOnSelect, Alignment.MIDDLE_CENTER);
+        CssLayout buttonGroup = new CssLayout();
+        buttonGroup.addStyleName(ValoTheme.LAYOUT_COMPONENT_GROUP);
+        
+        
+        buttonGroup.addComponent(new Button("Center",
                 new Button.ClickListener() {
                     @Override
                     public void buttonClick(ClickEvent event) {
@@ -171,14 +185,14 @@ public class InteractiveDemoView extends HorizontalSplitPanel {
                     }
                 }));
 
-        buttonArea.addComponent(new Button("Fit", new Button.ClickListener() {
+        buttonGroup.addComponent(new Button("Fit", new Button.ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
                 graphComponent.fitGraph();
             }
         }));
 
-        buttonArea.addComponent(new Button("Recreate",
+        buttonGroup.addComponent(new Button("Recreate",
                 new Button.ClickListener() {
                     @Override
                     public void buttonClick(ClickEvent event) {
@@ -187,6 +201,7 @@ public class InteractiveDemoView extends HorizontalSplitPanel {
                     }
                 }));
 
+        buttonArea.addComponent(buttonGroup);
         VerticalLayout pane = new VerticalLayout();
         pane.setSizeFull();
 
@@ -198,8 +213,9 @@ public class InteractiveDemoView extends HorizontalSplitPanel {
         panel.setSplitPosition(80, Unit.PERCENTAGE);
         panel.setSizeFull();
         panel.setFirstComponent(pane);
+        infoLabel = new Label("nothing Selected");
         panel.setSecondComponent(infoLabel);
-
+        
         return panel;
     }
 
