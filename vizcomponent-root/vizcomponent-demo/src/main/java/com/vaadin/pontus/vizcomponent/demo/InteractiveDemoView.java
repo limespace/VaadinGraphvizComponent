@@ -171,7 +171,6 @@ public class InteractiveDemoView extends HorizontalSplitPanel {
         buttonArea.setSpacing(true);
         // buttonArea.setWidth(100, Unit.PERCENTAGE);
         chkCenterOnSelect = new CheckBox("center on select"); 
-        chkCenterOnSelect.setImmediate(true);
         chkCenterOnSelect.setValue(true);
         buttonArea.addComponent(chkCenterOnSelect);
         buttonArea.setComponentAlignment(chkCenterOnSelect, Alignment.MIDDLE_CENTER);
